@@ -15,7 +15,7 @@ FROM ubuntu:latest
 
 # Update and install jdk + wget
 RUN apt update && apt upgrade -y
-RUN apt install openjdk-21-jdk -y
+RUN apt install openjdk-25-jdk -y
 
 # Download Minecraft to the /minecraft directory for running
 WORKDIR /minecraft
@@ -23,16 +23,13 @@ WORKDIR /minecraft
 # Copy the minecraft server from the builder to the server
 COPY --from=builder /minecraft/server.jar /minecraft/server.jar
 
-# Runs the server once so the eula.txt file exists
-RUN java -Xms2048M -Xmx2048M -jar server.jar nogui
-
 # Mark the EULA as agreed to
 RUN rm eula.txt
 RUN echo "eula=true" > eula.txt
 
 # Run the Minecraft server on container start
 # Note: This is running with 2gb of memory made available
-ENTRYPOINT java -Xms2048M -Xmx2048M -jar server.jar nogui && /bin/bash
+ENTRYPOINT ["java", "-Xms2048M", "-Xmx2048M", "--enable-native-access=ALL-UNNAMED", "-jar", "server.jar", "nogui"]
 
 # Useful for troubleshooting your dockerfile
 # ENTRYPOINT ["tail", "-f", "/dev/null"]
