@@ -1,5 +1,6 @@
 name: Minecraft CI/CD
 
+# Any push to main fires the whole pipeline
 on:
   push:
     branches: [ main ]
@@ -12,18 +13,22 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
+    # Generates the config file on the fly 
       - name: Create .env file
         run: |
           echo "DOCKERDATA=/root/data" >> .env
           echo "PORT=25565" >> .env
           echo "SERVER_NAME=prod-server" >> .env
 
+      # downloads the Minecraft jar and builds the Docker image right there in the cloud runner.
       - name: Run build script
         run: chmod +x build.sh && ./build.sh
 
+      # Exports the entire Docker image into a single file
       - name: Save image
         run: docker save minecraft-server > minecraft.tar
 
+      # Copies the docker-compose.yml, .env and minecraft.tar file to the server
       - name: Copy docker-compose.yml to server
         uses: appleboy/scp-action@v0.1.3
         with:
@@ -51,6 +56,7 @@ jobs:
           source: "minecraft.tar"
           target: "/root/"
 
+      # SSH's in and restarts the container with the new image
       - name: Deploy container
         uses: appleboy/ssh-action@v0.1.6
         with:
